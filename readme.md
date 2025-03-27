@@ -1,5 +1,4 @@
 ## Todo:
 
-- Create Github repo
 - Deploy into Azure
-- Create function that process the image after the upload
+- Update the BlobUploadFunction to create a thumbnail of the blob/ or a copy in a different container
