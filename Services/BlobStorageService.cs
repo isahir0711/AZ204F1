@@ -1,10 +1,17 @@
 using Azure.Storage;
 using Azure.Storage.Blobs;
+using Microsoft.Extensions.Logging;
 
 namespace FunctionP1.Services
 {
     public class BlobStorageService
     {
+        private readonly ILogger _logger;
+        public BlobStorageService(ILoggerFactory loggerFactory)
+        {
+            _logger = loggerFactory.CreateLogger<BlobStorageService>();
+        }
+
         private const string containerName = "demoimages";
         private const string accountName = "iztestblob";
         private const string accountEnvVarName = "STORAGEKEY";
@@ -26,9 +33,7 @@ namespace FunctionP1.Services
             return blobServiceClient;
         }
 
-
-        //List the blobs that have a size of > 5MB 
-        public async Task<List<string>> ListBlobs(BlobServiceClient blobServiceClient)
+        public async Task<List<string>> ListOldBlobs(BlobServiceClient blobServiceClient)
         {
             BlobContainerClient blobContainerClient = blobServiceClient.GetBlobContainerClient(containerName);
 
@@ -36,16 +41,18 @@ namespace FunctionP1.Services
 
             var resSegment = blobContainerClient.GetBlobsAsync();
 
+            //Blobs creados hace mas de 5 dias
+            var desiredDate = DateTime.Now.AddDays(-5);
+
             await foreach (var blobItem in resSegment)
             {
                 var createdOn = blobItem.Properties.CreatedOn;
-                var lastModifyOn = blobItem.Properties.LastModified;
-                //Get the blobSize
-                var blobSize = blobItem.Properties.ContentLength;
-                if (blobSize > 5_000_000)
+
+                if (createdOn < desiredDate)
                 {
                     blobList.Add(blobItem.Name);
                 }
+
             }
 
             return blobList;

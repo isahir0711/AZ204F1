@@ -6,16 +6,17 @@ using Microsoft.Extensions.Logging;
 
 namespace FunctionP1
 {
-    public class CleanBlobs
+    public class CleanBlobsFunction
     {
         private readonly ILogger _logger;
         private readonly BlobStorageService _blobStorageService;
 
-        private const string Cron = "0 */2 * * * *";
+        //Every day at 10:30
+        private const string Cron = "30 10 * * *";
 
-        public CleanBlobs(ILoggerFactory loggerFactory, BlobStorageService blobStorageService)
+        public CleanBlobsFunction(ILoggerFactory loggerFactory, BlobStorageService blobStorageService)
         {
-            _logger = loggerFactory.CreateLogger<CleanBlobs>();
+            _logger = loggerFactory.CreateLogger<CleanBlobsFunction>();
             _blobStorageService = blobStorageService;
         }
 
@@ -26,12 +27,16 @@ namespace FunctionP1
 
             BlobServiceClient blobServiceClient = _blobStorageService.GetBlobServiceClient();
 
-            var res = await _blobStorageService.ListBlobs(blobServiceClient);
+            var res = await _blobStorageService.ListOldBlobs(blobServiceClient);
 
-            foreach (var blob in res)
+            if (res.Count > 1)
             {
-                await _blobStorageService.DeleteBlob(blob, blobServiceClient);
+                foreach (var blob in res)
+                {
+                    await _blobStorageService.DeleteBlob(blob, blobServiceClient);
+                }
             }
+
         }
     }
 }
